@@ -2,8 +2,11 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:personal_dairy/screens/edit_entry.dart';
 import 'package:personal_dairy/screens/memory_screen.dart';
 import 'package:personal_dairy/screens/new_entry.dart';
+import 'package:personal_dairy/services/journal_entry_adapter.dart';
+import 'package:personal_dairy/services/journal_services.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,15 +28,15 @@ class _HomeScreenState extends State<HomeScreen> {
     Colors.indigo.shade100,
   ];
 
-  List<String> entries = [
-    "I am feeling so happy today. I had a great day at work and I am so proud of myself.",
-    "I am feeling so sad today. I had a bad day at work and I am so disappointed in myself.",
-  ];
-
   Color getColor() {
     int idx = Random().nextInt(colors.length);
 
     return colors[idx];
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
@@ -113,44 +116,72 @@ class _HomeScreenState extends State<HomeScreen> {
               // recent entries
               Container(
                 height: mq.height * 0.2,
-                child: Expanded(
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (ctx, idx) {
-                      return Container(
-                          height: mq.height * 0.15,
-                          width: mq.width * 0.7,
-                          margin: EdgeInsets.all(12),
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: getColor(),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Text(
-                                entries[idx],
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0XFF5D3D3D),
+                child: StreamBuilder<List<JournalEntry>>(
+                  stream: JournalServices().journalStream,
+                  initialData: JournalServices().fetchAllEntries(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(child: Text('No entries yet'));
+                    }
+
+                    final journals = snapshot.data!;
+
+                    return ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: journals.length,
+                      itemBuilder: (ctx, idx) {
+                        final journal = journals[idx];
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EditEntryScreen(
+                                  entry: journal,
                                 ),
                               ),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: Text("1/12/2021",
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0XFF5D3D3D),
-                                    )),
-                              )
-                            ],
-                          ));
-                    },
-                    itemCount: entries.length,
-                  ),
+                            );
+                          },
+                          child: Container(
+                            height: mq.height * 0.15,
+                            width: mq.width * 0.7,
+                            margin: EdgeInsets.all(12),
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Color(journal.color),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  journal.title,
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0XFF5D3D3D),
+                                  ),
+                                ),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                      journal.createdAt
+                                          .toString()
+                                          .split(' ')[0],
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0XFF5D3D3D),
+                                      )),
+                                )
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ],

@@ -1,46 +1,28 @@
-// ignore_for_file: use_build_context_synchronously
-
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:personal_dairy/services/journal_services.dart';
-import 'package:personal_dairy/utils/custom_snackbar.dart';
 
 import '../services/journal_entry_adapter.dart';
+import '../services/journal_services.dart';
+import '../utils/custom_snackbar.dart';
 
-class NewEntryScreen extends StatefulWidget {
-  const NewEntryScreen({super.key});
+class EditEntryScreen extends StatefulWidget {
+  final JournalEntry entry;
+  const EditEntryScreen({super.key, required this.entry});
 
   @override
-  State<NewEntryScreen> createState() => _NewEntryScreenState();
+  State<EditEntryScreen> createState() => _EditEntryScreenState();
 }
 
-class _NewEntryScreenState extends State<NewEntryScreen> {
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _bodyController = TextEditingController();
-
-  final List<Color> colors = [
-    Colors.red.shade100,
-    Colors.blue.shade100,
-    Colors.green.shade100,
-    Colors.purple.shade100,
-    Colors.orange.shade100,
-    Colors.yellow.shade100,
-    Colors.pink.shade100,
-    Colors.teal.shade100,
-    Colors.indigo.shade100,
-  ];
-
-  String generateId() => 'J${Random().nextInt(100)}';
-  Color getColor() => colors[Random().nextInt(colors.length)];
+class _EditEntryScreenState extends State<EditEntryScreen> {
+  late TextEditingController _titleController;
+  late TextEditingController _bodyController;
 
   void saveEntry() async {
     JournalEntry entry = JournalEntry(
-      entryId: generateId(),
+      entryId: widget.entry.entryId,
       title: _titleController.text.isEmpty ? "No Title" : _titleController.text,
       content:
           _bodyController.text.isEmpty ? "No Content" : _bodyController.text,
-      color: getColor().value,
+      color: widget.entry.color,
       createdAt: DateTime.now(),
     );
 
@@ -48,6 +30,13 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       successBar(context, "Entry Saved");
       Navigator.pop(context);
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.entry.title);
+    _bodyController = TextEditingController(text: widget.entry.content);
   }
 
   @override
