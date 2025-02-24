@@ -3,6 +3,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:personal_dairy/services/embedding_services.dart';
 import 'package:personal_dairy/services/journal_services.dart';
 import 'package:personal_dairy/utils/custom_snackbar.dart';
 
@@ -35,8 +36,10 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   Color getColor() => colors[Random().nextInt(colors.length)];
 
   void saveEntry() async {
+    final id = generateId();
+
     JournalEntry entry = JournalEntry(
-      entryId: generateId(),
+      entryId: id,
       title: _titleController.text.isEmpty ? "No Title" : _titleController.text,
       content:
           _bodyController.text.isEmpty ? "No Content" : _bodyController.text,
@@ -48,6 +51,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       successBar(context, "Entry Saved");
       Navigator.pop(context);
     });
+
+    EmbeddingServices().storeInPinecone(id, _bodyController.text);
   }
 
   @override

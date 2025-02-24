@@ -1,7 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:personal_dairy/services/embedding_services.dart';
 
-class MemoryScreen extends StatelessWidget {
+class MemoryScreen extends StatefulWidget {
   const MemoryScreen({super.key});
+
+  @override
+  State<MemoryScreen> createState() => _MemoryScreenState();
+}
+
+class _MemoryScreenState extends State<MemoryScreen> {
+  final TextEditingController _controller = TextEditingController();
+
+  List<MessageBubble> messages = [
+    const MessageBubble(
+      isUser: true,
+      message: "This is where journal entries will appear",
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -22,25 +37,27 @@ class MemoryScreen extends StatelessWidget {
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: 2, // Will be populated later with actual entries
+              itemCount: messages.length,
               itemBuilder: (context, index) {
+                final message = messages[index];
                 return MessageBubble(
-                  isUser: (index % 2 == 0) ? true : false,
-                  message: "This is where journal entries will appear",
+                  isUser: message.isUser,
+                  message: message.message,
                 );
               },
             ),
           ),
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
             ),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
-                    decoration: InputDecoration(
+                    controller: _controller,
+                    decoration: const InputDecoration(
                       hintText: 'Ask about your memories...',
                       border: InputBorder.none,
                     ),
@@ -48,8 +65,29 @@ class MemoryScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  onPressed: () {
-                    // Will add send logic later
+                  onPressed: () async {
+                    final userMessage = _controller.text;
+                    if (userMessage.isEmpty) return;
+
+                    setState(() {
+                      messages.add(MessageBubble(
+                        isUser: true,
+                        message: userMessage,
+                      ));
+                    });
+                    _controller.clear();
+
+                    final memory =
+                        await EmbeddingServices().searchJournal(userMessage);
+                    final response = await EmbeddingServices()
+                        .generateGeminiResponse(memory, userMessage);
+
+                    setState(() {
+                      messages.add(MessageBubble(
+                        isUser: false,
+                        message: response,
+                      ));
+                    });
                   },
                   icon: const Icon(Icons.send),
                   color: Theme.of(context).primaryColor,
