@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:personal_dairy/services/journal_entry_adapter.dart';
 import 'dart:async';
@@ -16,7 +17,9 @@ class JournalServices {
 
     await box.put(journal.entryId, journal);
 
-    print("Entry saved");
+    if (kDebugMode) {
+      print("Entry saved");
+    }
 
     // After saving, emit the updated list
     final updatedEntries = fetchAllEntries();

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 
 import '../services/journal_entry_adapter.dart';
@@ -46,12 +48,12 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
       appBar: AppBar(
         leading: IconButton(
             onPressed: () => saveEntry(),
-            icon: Icon(
+            icon: const Icon(
               Icons.arrow_back,
               color: Color(0XFF5D3D3D),
             )),
         backgroundColor: Colors.white,
-        title: Text(
+        title: const Text(
           "New Entry",
           style:
               TextStyle(color: Color(0XFF5D3D3D), fontWeight: FontWeight.bold),
@@ -62,7 +64,7 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
             onPressed: () {},
             icon: Transform.rotate(
               angle: 45 * 3.14159 / 180, // Convert 45 degrees to radians
-              child: Icon(
+              child: const Icon(
                 Icons.attach_file,
                 color: Color(0XFF5D3D3D),
               ),
@@ -77,30 +79,30 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
           children: [
             TextField(
               controller: _titleController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Enter Title',
                 border: InputBorder.none,
               ),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 40,
                 fontWeight: FontWeight.bold,
                 color: Color(0XFF5D3D3D),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               DateTime.now().toString().split(' ')[0],
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.grey,
                 fontSize: 16,
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Expanded(
               child: TextField(
                 controller: _bodyController,
                 maxLines: null,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Write your thoughts...',
                   border: InputBorder.none,
                 ),

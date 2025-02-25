@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -57,7 +58,11 @@ class EmbeddingServices {
     );
 
     if (response.statusCode == 200) {
-      print("Stored in Pinecone successfully!");
+      if (kDebugMode) {
+        if (kDebugMode) {
+          print("Stored in Pinecone successfully!");
+        }
+      }
     } else {
       throw Exception("Failed to store in Pinecone");
     }
@@ -70,7 +75,7 @@ class EmbeddingServices {
     List<double> queryVector = await getEmbeddings(query);
 
     final response = await http.post(
-      Uri.parse(pineconeIndexUrl!),
+      Uri.parse(pineconeIndexUrl),
       headers: {
         "Content-Type": "application/json",
         "Api-Key": pineconeApiKey!,
@@ -85,7 +90,9 @@ class EmbeddingServices {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       if (data["matches"].isNotEmpty) {
-        print(data["matches"][0]["metadata"]["text"]);
+        if (kDebugMode) {
+          print(data["matches"][0]["metadata"]["text"]);
+        }
         return data["matches"][0]["metadata"]["text"];
       } else {
         return "No matching journal entry found.";
@@ -112,6 +119,38 @@ class EmbeddingServices {
               {
                 "text":
                     "Given the current query: $query, respond based on the previous memory: $lastMemory, ensuring consistency with past responses."
+              }
+            ]
+          }
+        ]
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["candidates"][0]["content"]["parts"][0]["text"];
+    } else {
+      throw Exception('Failed to generate response');
+    }
+  }
+
+  Future<String> generateFollowup(String prevResponse, String newQuery) async {
+    final apiKey = dotenv.env['GEMINI_API_KEY'];
+    final url =
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$apiKey';
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        "contents": [
+          {
+            "parts": [
+              {
+                "text":
+                    "Given the current query: $newQuery, respond based on the previous response: $prevResponse, ensuring consistency with past responses."
               }
             ]
           }
