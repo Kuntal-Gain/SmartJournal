@@ -19,6 +19,7 @@ class NewEntryScreen extends StatefulWidget {
 class _NewEntryScreenState extends State<NewEntryScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _bodyController = TextEditingController();
+  int colorIndex = 0;
 
   final List<Color> colors = [
     Colors.red.shade100,
@@ -30,10 +31,14 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     Colors.pink.shade100,
     Colors.teal.shade100,
     Colors.indigo.shade100,
+    Colors.cyan.shade100,
+    Colors.lime.shade100,
+    Colors.brown.shade100,
+    Colors.blueGrey.shade100,
   ];
 
   String generateId() => 'J${Random().nextInt(100)}';
-  Color getColor() => colors[Random().nextInt(colors.length)];
+  Color getColor(int idx) => colors[idx];
 
   void saveEntry() async {
     final id = generateId();
@@ -43,7 +48,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       title: _titleController.text.isEmpty ? "No Title" : _titleController.text,
       content:
           _bodyController.text.isEmpty ? "No Content" : _bodyController.text,
-      color: getColor().value,
+      color: getColor(colorIndex).value,
       createdAt: DateTime.now(),
     );
 
@@ -57,8 +62,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context).size;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: getColor(colorIndex),
       appBar: AppBar(
         leading: IconButton(
             onPressed: () => saveEntry(),
@@ -66,7 +72,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               Icons.arrow_back,
               color: Color(0XFF5D3D3D),
             )),
-        backgroundColor: Colors.white,
+        backgroundColor: getColor(colorIndex),
         title: const Text(
           "New Entry",
           style:
@@ -109,6 +115,33 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               style: const TextStyle(
                 color: Colors.grey,
                 fontSize: 16,
+              ),
+            ),
+            SizedBox(
+              height: mq.height * 0.07,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: colors.length,
+                itemBuilder: (ctx, idx) {
+                  return GestureDetector(
+                    onTap: () => setState(() => colorIndex = idx),
+                    child: Container(
+                      height: mq.height * 0.06,
+                      width: mq.width * 0.06,
+                      margin: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colors[idx],
+                        shape: BoxShape.circle,
+                        border: colorIndex == idx
+                            ? Border.all(
+                                color: Colors.deepPurple,
+                                width: 2,
+                              )
+                            : null,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 16),

@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:personal_dairy/screens/splash_screen.dart';
+import 'package:personal_dairy/services/embedding_services.dart';
 import 'package:personal_dairy/services/journal_entry_adapter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
+
+  final namespace = await EmbeddingServices().getNamespace();
+
+  debugPrint(namespace);
 
   // register adapter
   Hive.registerAdapter(JournalEntryAdapter());

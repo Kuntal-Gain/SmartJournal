@@ -257,12 +257,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   onTap: () => Navigator.push(context,
                       MaterialPageRoute(builder: (_) => const MemoryScreen())),
                   child: Container(
-                    height: mq.height * 0.08,
-                    width: mq.width * 0.45,
+                    height: mq.height * 0.07,
+                    width: mq.width * 0.4,
                     margin: EdgeInsets.all(mq.height * 0.01),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(14),
                       boxShadow: const [
                         BoxShadow(
                           color: Color(0xffc2c2c2),
@@ -311,12 +311,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       onTap: () =>
           Navigator.push(context, MaterialPageRoute(builder: (_) => screen)),
       child: Container(
-        height: mq.height * 0.08,
-        width: mq.width * 0.45,
+        height: mq.height * 0.07,
+        width: mq.width * 0.4,
         margin: EdgeInsets.all(mq.height * 0.01),
         decoration: BoxDecoration(
           color: const Color(0XFF5D3D3D),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Center(
           child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [

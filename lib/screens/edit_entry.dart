@@ -44,7 +44,7 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color(widget.entry.color),
       appBar: AppBar(
         leading: IconButton(
             onPressed: () => saveEntry(),
@@ -52,9 +52,9 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
               Icons.arrow_back,
               color: Color(0XFF5D3D3D),
             )),
-        backgroundColor: Colors.white,
+        backgroundColor: Color(widget.entry.color),
         title: const Text(
-          "New Entry",
+          "Edit Entry",
           style:
               TextStyle(color: Color(0XFF5D3D3D), fontWeight: FontWeight.bold),
         ),

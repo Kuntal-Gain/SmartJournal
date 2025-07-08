@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:personal_dairy/services/local_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class EmbeddingServices {
   Future<List<double>> getEmbeddings(String text) async {
@@ -33,12 +35,16 @@ class EmbeddingServices {
     }
   }
 
+  Future<String> getNamespace() async =>
+      await LocalStorageService(await SharedPreferences.getInstance())
+          .getOrCreateNamespace();
   Future<void> storeInPinecone(String id, String text) async {
     final pineconeApiKey = dotenv.env['PINECONE_API_KEY'];
     final pineconeIndexUrl =
         '${dotenv.env['PINECONE_ENDPOINT']}/vectors/upsert';
 
     List<double> vector = await getEmbeddings(text);
+    final namespace = await getNamespace();
 
     final response = await http.post(
       Uri.parse(pineconeIndexUrl),
@@ -47,6 +53,7 @@ class EmbeddingServices {
         "Api-Key": pineconeApiKey!,
       },
       body: jsonEncode({
+        "namespace": namespace,
         "vectors": [
           {
             "id": id,
@@ -81,6 +88,7 @@ class EmbeddingServices {
         "Api-Key": pineconeApiKey!,
       },
       body: jsonEncode({
+        "namespace": await getNamespace(),
         "vector": queryVector,
         "topK": 1, // Get the most relevant journal entry
         "includeMetadata": true
