@@ -37,7 +37,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     Colors.blueGrey.shade100,
   ];
 
-  String generateId() => 'J${Random().nextInt(100)}';
+  String generateId() => 'J${Random().nextInt(100000)}';
   Color getColor(int idx) => colors[idx];
 
   void saveEntry() async {
@@ -57,7 +57,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       Navigator.pop(context);
     });
 
-    EmbeddingServices().storeInPinecone(id, _bodyController.text);
+    EmbeddingServices().storeInPinecone(id, entry);
   }
 
   @override

@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:personal_dairy/services/embedding_services.dart';
 import 'package:lottie/lottie.dart';
 
+import '../models/journal.dart';
+
 class MemoryScreen extends StatefulWidget {
   const MemoryScreen({super.key});
 
@@ -17,21 +19,37 @@ class _MemoryScreenState extends State<MemoryScreen> {
   List<MessageBubble> messages = [];
   bool isLoading = false;
   String mention = "";
+  Journal? memoryItem;
+  String botResponse = "";
 
-  Future<String> sendMessage(String message) async {
-    final memory = await EmbeddingServices().searchJournal(message);
-    final response =
-        await EmbeddingServices().generateGeminiResponse(memory, message);
+  Future<void> sendMessage(String message) async {
+    print('💬 Sending: $message');
 
-    return response;
+    final journalHit = await EmbeddingServices().searchJournal(message);
+    final lastMemory = journalHit?.content; // may be null
+
+    print('🗃️ lastMemory → ${lastMemory ?? "<none>"}');
+
+    final botReply =
+        await EmbeddingServices().generateGeminiResponse(lastMemory!, message);
+
+    setState(() {
+      memoryItem = journalHit; // could still be null – that’s fine
+      botResponse = botReply;
+    });
   }
 
   Future<String> followup(String prevRes, String newQuery) async =>
       EmbeddingServices().generateFollowup(prevRes, newQuery);
 
-  Future<String> askQuery(bool isFollowup) async => isFollowup
-      ? await followup(messages.last.message, _controller.text)
-      : await sendMessage(_controller.text);
+  Future<String> askQuery(bool isFollowup) async {
+    if (isFollowup) {
+      return await followup(messages.last.message, _controller.text);
+    } else {
+      await sendMessage(_controller.text);
+      return botResponse;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -207,8 +225,6 @@ class _MemoryScreenState extends State<MemoryScreen> {
                           isLoading = true; // Show loading indicator
                         });
 
-                        _controller.clear(); // Clear input field
-
                         // Get response
                         final response = await askQuery(mention.isNotEmpty);
 
@@ -218,6 +234,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
                           messages.add(MessageBubble(
                             isUser: false,
                             message: response,
+                            memoryItem: memoryItem,
                             onReply: (replyMessage) {
                               setState(() {
                                 mention = replyMessage;
@@ -225,6 +242,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
                             },
                           ));
                         });
+                        _controller.clear(); // Clear input field
                       },
                       icon: const Icon(Icons.send),
                       color: Theme.of(context).primaryColor,
@@ -243,6 +261,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
 class MessageBubble extends StatefulWidget {
   final String message;
   final bool isUser;
+  final Journal? memoryItem;
   final Function(String) onReply;
 
   const MessageBubble({
@@ -250,6 +269,7 @@ class MessageBubble extends StatefulWidget {
     required this.message,
     required this.isUser,
     required this.onReply,
+    this.memoryItem,
   });
 
   @override
@@ -336,6 +356,28 @@ class _MessageBubbleState extends State<MessageBubble>
                 ),
               ),
             ),
+
+            if (widget.memoryItem != null)
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                decoration: BoxDecoration(
+                  color: widget.isUser
+                      ? Colors.grey[300]
+                      : const Color(0XFF5D3D3D),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  widget.memoryItem!.content,
+                  style: GoogleFonts.montserrat(
+                    textStyle: TextStyle(
+                      color: widget.isUser ? Colors.black : Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
