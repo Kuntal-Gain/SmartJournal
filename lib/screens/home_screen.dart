@@ -7,6 +7,8 @@ import 'package:personal_dairy/services/journal_entry_adapter.dart';
 import 'package:personal_dairy/services/journal_services.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
+import 'view_entry.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -194,10 +196,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) =>
-                                      EditEntryScreen(entry: journal),
+                                      ViewEntryScreen(entry: journal),
                                 ),
                               );
                             },
+                            onLongPress: () {},
                             child: Container(
                               height: mq.height * 0.15,
                               width: mq.width * 0.7,

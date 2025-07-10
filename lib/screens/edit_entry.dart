@@ -1,10 +1,15 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:flutter/material.dart';
+import 'dart:math';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../services/embedding_services.dart';
 import '../services/journal_entry_adapter.dart';
 import '../services/journal_services.dart';
 import '../utils/custom_snackbar.dart';
+import 'widgets/markdown_preview.dart';
 
 class EditEntryScreen extends StatefulWidget {
   final JournalEntry entry;
@@ -17,14 +22,40 @@ class EditEntryScreen extends StatefulWidget {
 class _EditEntryScreenState extends State<EditEntryScreen> {
   late TextEditingController _titleController;
   late TextEditingController _bodyController;
+  final FocusNode _bodyFocusNode = FocusNode();
+  final FocusNode _keyboardFocusNode = FocusNode();
+
+  int colorIndex = 0;
+
+  final List<Color> colors = [
+    Colors.red.shade100,
+    Colors.blue.shade100,
+    Colors.green.shade100,
+    Colors.purple.shade100,
+    Colors.orange.shade100,
+    Colors.yellow.shade100,
+    Colors.pink.shade100,
+    Colors.teal.shade100,
+    Colors.indigo.shade100,
+    Colors.cyan.shade100,
+    Colors.lime.shade100,
+    Colors.brown.shade100,
+    Colors.blueGrey.shade100,
+  ];
+
+  String generateId() => 'J${Random().nextInt(100000)}';
+  Color getColor(int idx) => colors[idx];
+  bool showPreview = false;
 
   void saveEntry() async {
+    final id = generateId();
+
     JournalEntry entry = JournalEntry(
-      entryId: widget.entry.entryId,
+      entryId: id,
       title: _titleController.text.isEmpty ? "No Title" : _titleController.text,
       content:
           _bodyController.text.isEmpty ? "No Content" : _bodyController.text,
-      color: widget.entry.color,
+      color: getColor(colorIndex).value,
       createdAt: DateTime.now(),
     );
 
@@ -32,6 +63,28 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
       successBar(context, "Entry Saved");
       Navigator.pop(context);
     });
+
+    EmbeddingServices().storeInPinecone(id, entry);
+  }
+
+  void handleKeyPress(RawKeyEvent event) {
+    if (event is RawKeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.enter) {
+      final text = _bodyController.text;
+      final lines = text.split('\n');
+      for (int i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('# ')) {
+          lines[i] = 'H1: ${lines[i].substring(2)}';
+        }
+      }
+      final newText = lines.join('\n');
+      if (newText != text) {
+        _bodyController.text = newText;
+        _bodyController.selection = TextSelection.fromPosition(
+          TextPosition(offset: newText.length),
+        );
+      }
+    }
   }
 
   @override
@@ -43,6 +96,7 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Color(widget.entry.color),
       appBar: AppBar(
@@ -97,15 +151,61 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
                 fontSize: 16,
               ),
             ),
+            SizedBox(
+              height: mq.height * 0.07,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: colors.length,
+                itemBuilder: (ctx, idx) {
+                  return GestureDetector(
+                    onTap: () => setState(() => colorIndex = idx),
+                    child: Container(
+                      height: mq.height * 0.06,
+                      width: mq.width * 0.06,
+                      margin: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colors[idx],
+                        shape: BoxShape.circle,
+                        border: colorIndex == idx
+                            ? Border.all(
+                                color: Colors.deepPurple,
+                                width: 2,
+                              )
+                            : null,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
             const SizedBox(height: 16),
             Expanded(
-              child: TextField(
-                controller: _bodyController,
-                maxLines: null,
-                decoration: const InputDecoration(
-                  hintText: 'Write your thoughts...',
-                  border: InputBorder.none,
-                ),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _bodyController,
+                    focusNode: _bodyFocusNode,
+                    maxLines: null,
+                    decoration: const InputDecoration(
+                      hintText: 'Write your thoughts...',
+                      border: InputBorder.none,
+                    ),
+                    onChanged: (_) => setState(() {}), // just re-render preview
+                  ),
+                  Stack(
+                    children: [
+                      const Divider(),
+                      SwitchListTile(
+                        value: showPreview,
+                        onChanged: (value) =>
+                            setState(() => showPreview = value),
+                        title: const Text('Enable Preview'),
+                      ),
+                    ],
+                  ),
+                  if (showPreview)
+                    Expanded(child: MarkdownPreview(_bodyController.text)),
+                ],
               ),
             ),
           ],

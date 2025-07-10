@@ -3,11 +3,13 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:personal_dairy/services/embedding_services.dart';
 import 'package:personal_dairy/services/journal_services.dart';
 import 'package:personal_dairy/utils/custom_snackbar.dart';
 
 import '../services/journal_entry_adapter.dart';
+import 'widgets/markdown_preview.dart';
 
 class NewEntryScreen extends StatefulWidget {
   const NewEntryScreen({super.key});
@@ -19,6 +21,9 @@ class NewEntryScreen extends StatefulWidget {
 class _NewEntryScreenState extends State<NewEntryScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _bodyController = TextEditingController();
+  final FocusNode _bodyFocusNode = FocusNode();
+  final FocusNode _keyboardFocusNode = FocusNode();
+
   int colorIndex = 0;
 
   final List<Color> colors = [
@@ -60,6 +65,26 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     EmbeddingServices().storeInPinecone(id, entry);
   }
 
+  void handleKeyPress(RawKeyEvent event) {
+    if (event is RawKeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.enter) {
+      final text = _bodyController.text;
+      final lines = text.split('\n');
+      for (int i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('# ')) {
+          lines[i] = 'H1: ${lines[i].substring(2)}';
+        }
+      }
+      final newText = lines.join('\n');
+      if (newText != text) {
+        _bodyController.text = newText;
+        _bodyController.selection = TextSelection.fromPosition(
+          TextPosition(offset: newText.length),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context).size;
@@ -83,7 +108,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
           IconButton(
             onPressed: () {},
             icon: Transform.rotate(
-              angle: 45 * 3.14159 / 180, // Convert 45 degrees to radians
+              angle: 45 * 3.14159 / 180,
               child: const Icon(
                 Icons.attach_file,
                 color: Color(0XFF5D3D3D),
@@ -146,13 +171,21 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: TextField(
-                controller: _bodyController,
-                maxLines: null,
-                decoration: const InputDecoration(
-                  hintText: 'Write your thoughts...',
-                  border: InputBorder.none,
-                ),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _bodyController,
+                    focusNode: _bodyFocusNode,
+                    maxLines: null,
+                    decoration: const InputDecoration(
+                      hintText: 'Write your thoughts...',
+                      border: InputBorder.none,
+                    ),
+                    onChanged: (_) => setState(() {}), // just re-render preview
+                  ),
+                  const Divider(),
+                  Expanded(child: MarkdownPreview(_bodyController.text)),
+                ],
               ),
             ),
           ],
